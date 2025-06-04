@@ -1,0 +1,13 @@
+json
+{
+  "name": "bz-bk-game",
+  "version": "1.0.0",
+  "description": "Mon jeu cocos2d-js",
+  "main": "source/index.js",
+  "scripts": {
+    "start": "node source/index.js"
+  },
+  "author": "BZ1025",
+  "license": "MIT"
+}
+```
