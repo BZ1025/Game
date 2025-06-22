@@ -3,105 +3,161 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Formulaire Inscription</title>
+<title>ChatGPT avec bouton voix</title>
 <style>
   body {
     font-family: Arial, sans-serif;
-    background: #f8f9fa;
-    padding: 20px;
-  }
-  .container {
-    max-width: 400px;
-    margin: auto;
-    background: #fff;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 10px rgb(0 0 0 / 0.1);
-  }
-  h2 {
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  label {
-    font-weight: 600;
-    display: block;
-    margin-top: 15px;
-  }
-  input[type="text"], input[type="password"], input[type="tel"] {
-    width: 100%;
+    max-width: 600px;
+    margin: 40px auto;
     padding: 10px;
-    margin-top: 5px;
+    background: #f4f4f8;
+  }
+  #chat {
     border: 1px solid #ccc;
-    border-radius: 4px;
+    height: 400px;
+    overflow-y: auto;
+    padding: 10px;
+    background: white;
+    margin-bottom: 10px;
+    border-radius: 8px;
   }
-  .otp-group {
+  .message {
+    margin-bottom: 15px;
     display: flex;
-    margin-top: 5px;
+    align-items: center;
   }
-  .otp-group input {
+  .user {
+    font-weight: bold;
+    color: #007bff;
+    margin-right: 8px;
+  }
+  .bot {
+    font-weight: bold;
+    color: #28a745;
+    margin-right: 8px;
+  }
+  .text {
     flex: 1;
-    border-radius: 4px 0 0 4px;
-    border-right: none;
   }
-  .otp-group button {
-    padding: 10px 15px;
-    border: 1px solid #007bff;
-    background-color: #007bff;
+  button.speak-btn {
+    background: #28a745;
     color: white;
-    border-radius: 0 4px 4px 0;
-    cursor: pointer;
-  }
-  .otp-group button:hover {
-    background-color: #0056b3;
-  }
-  button.submit-btn {
-margin-top: 30px;
-    width: 100%;
-    background-color: #3b74e6;
-    color: white;
-    padding: 15px;
-    font-size: 1rem;
     border: none;
-    border-radius: 25px;
+    margin-left: 10px;
+    padding: 5px 10px;
+    border-radius: 5px;
     cursor: pointer;
   }
-  button.submit-btn:hover {
-    background-color: #2a55c1;
+  #inputForm {
+    display: flex;
+  }
+  #inputForm input {
+flex: 1;
+    padding: 10px;
+    font-size: 16px;
+  }
+  #inputForm button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
   }
 </style>
 </head>
 <body>
 
-<div class="container">
-  <h2>Bienvenue à nous rejoindre</h2>
-  <form>
-    <label for="phone">Numéro de Téléphone</label>
-    <input type="tel" id="phone" name="phone" placeholder="Entrez votre numéro" required />
+<div id="chat"></div>
 
-    <label for="password">Mot de Passe de Connexion</label>
-    <input type="password" id="password" name="password" placeholder="Mot de Passe de Connexion" required />
+<form id="inputForm">
+  <input type="text" id="userInput" placeholder="Tape ta question..." autocomplete="off" required />
+  <button type="submit">Envoyer</button>
+</form>
 
-    <label for="pseudo">Pseudo</label>
-    <input type="text" id="pseudo" name="pseudo" placeholder="Entrez votre pseudo" required />
-
-    <label for="invite">Code d'Invitation</label>
-    <input type="text" id="invite" name="invite" placeholder="Veuillez entrer le code d'invitation" />
-
-    <label for="otp">Code de Vérification (OTP)</label>
-    <div class="otp-group">
-      <input type="text" id="otp" name="otp" placeholder="Code de Vérification" />
-      <button type="button" onclick="envoyerOTP()">Envoyer</button>
-    </div>
-
-    <button type="submit" class="submit-btn">S'inscrire Maintenant</button>
-  </form>
-</div>
 <script>
-  function envoyerOTP() {
-    alert('Code de vérification envoyé!');
-    // Ici tu peux ajouter ta logique d'envoi OTP
+const chat = document.getElementById('chat');
+const inputForm = document.getElementById('inputForm');
+const userInput = document.getElementById('userInput');
+
+// Fonction pour échapper les caractères HTML
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Fonction pour ajouter un message dans la discussion
+function addMessage(user, text, isBot = false) {
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'message';
+
+  const userSpan = document.createElement('span');
+  userSpan.className = isBot ? 'bot' : 'user';
+  userSpan.textContent = isBot ? 'Bot:' : 'Vous:';
+
+  const textSpan = document.createElement('span');
+  textSpan.className = 'text';
+  textSpan.innerHTML = escapeHtml(text);
+
+  msgDiv.appendChild(userSpan);
+  msgDiv.appendChild(textSpan);
+
+  // Si c'est le bot, ajoute un bouton de synthèse vocale
+if (isBot) {
+    const speakBtn = document.createElement('button');
+    speakBtn.className = 'speak-btn';
+    speakBtn.textContent = '🔊';
+    speakBtn.title = 'Lire la réponse à voix haute';
+    speakBtn.onclick = () => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      speechSynthesis.speak(utterance);
+    };
+    msgDiv.appendChild(speakBtn);
   }
+
+  chat.appendChild(msgDiv);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+// Clé API OpenAI (NE PAS EXPOSER EN PRODUCTION !)
+const OPENAI_API_KEY = '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';
+
+// Fonction pour appeler l'API OpenAI
+async function getChatGPTResponse(message) {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini', // ou gpt-4, gpt-3.5-turbo selon ce que tu veux
+      messages: [{ role: 'user', content: message }]
+    })
+  });
+  const data = await response.json();
+  return data.choices[0].message.content.trim();
+}
+
+inputForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const message = userInput.value.trim();
+  if (!message) return;
+  addMessage('Vous', message);
+userInput.value = '';
+  addMessage('Bot', '...', true);
+
+  try {
+    const botResponse = await getChatGPTResponse(message);
+    // Remplace le dernier message '...' par la vraie réponse
+    const botMessages = chat.querySelectorAll('.bot');
+    botMessages[botMessages.length - 1].nextSibling.textContent = botResponse;
+  } catch (err) {
+    // En cas d'erreur, affiche un message
+    const botMessages = chat.querySelectorAll('.bot');
+    botMessages[botMessages.length - 1].nextSibling.textContent = 'Erreur lors de la requête.?';
+  }
+});
 </script>
 
 </body>
 </html>
+    
